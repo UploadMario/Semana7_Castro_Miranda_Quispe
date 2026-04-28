@@ -1,22 +1,35 @@
 <?php
-require_once "../models/Usuario.php";
+require_once __DIR__ . '/../models/Usuario.php';
 
 class AuthController {
+    public function login(PDO $conexion): void {
+        $usuario = trim($_POST['usuario'] ?? '');
+        $clave = $_POST['clave'] ?? '';
 
-    public function login($conexion){
-        $model = new Usuario($conexion);
-        $user = $model->buscar($_POST['usuario']);
-
-        if($user && password_verify($_POST['clave'], $user['clave'])){
-            $_SESSION['user'] = $user;
-            header("Location: index.php");
-        } else {
-            echo "Credenciales incorrectas";
+        if ($usuario === '' || $clave === '') {
+            $_SESSION['error'] = 'Ingrese usuario y contraseña.';
+            header('Location: index.php');
+            exit;
         }
+
+        $model = new Usuario($conexion);
+        $user = $model->buscarPorUsuario($usuario);
+
+        if ($user && password_verify($clave, $user['clave'])) {
+            unset($user['clave']);
+            $_SESSION['user'] = $user;
+            header('Location: index.php');
+            exit;
+        }
+
+        $_SESSION['error'] = 'Credenciales incorrectas.';
+        header('Location: index.php');
+        exit;
     }
 
-    public function logout(){
+    public function logout(): void {
         session_destroy();
-        header("Location: index.php");
+        header('Location: index.php');
+        exit;
     }
 }

@@ -1,52 +1,83 @@
 <?php
-require_once "../models/Carpeta.php";
+require_once __DIR__ . '/../models/Carpeta.php';
 
 class CarpetaController {
+    public function guardar(PDO $conexion): void {
+        $errores = $this->validar($_POST);
+        if ($errores) {
+            $_SESSION['errores'] = $errores;
+            $_SESSION['old'] = $_POST;
+            header('Location: index.php?view=form');
+            exit;
+        }
 
-    public function guardar($conexion){
-        $model = new Carpeta($conexion);
-
-        $model->insertar([
-            $_POST['nro_carpeta'],
-            $_POST['denunciante'],
-            $_POST['agraviado'],
-            $_POST['delito'],
-            $_POST['fecha_hecho'],
-            $_POST['fiscal_responsable'],
-            $_POST['fiscalia'],
-            $_POST['estado']
-        ]);
-
-        header("Location: index.php?view=listar");
+        (new Carpeta($conexion))->insertar($_POST);
+        $_SESSION['success'] = 'Carpeta registrada correctamente.';
+        header('Location: index.php?view=listar');
+        exit;
     }
 
-    public function listar($conexion){
-        return (new Carpeta($conexion))->listar();
+    public function actualizar(PDO $conexion): void {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Registro no válido.';
+            header('Location: index.php?view=listar');
+            exit;
+        }
+
+        $errores = $this->validar($_POST);
+        if ($errores) {
+            $_SESSION['errores'] = $errores;
+            $_SESSION['old'] = $_POST;
+            header('Location: index.php?view=form&id=' . $id);
+            exit;
+        }
+
+        (new Carpeta($conexion))->actualizar($id, $_POST);
+        $_SESSION['success'] = 'Carpeta actualizada correctamente.';
+        header('Location: index.php?view=listar');
+        exit;
     }
 
-    public function dashboard($conexion){
-
-    // TOTAL POR ESTADO
-    $archivados = $conexion->query("SELECT COUNT(*) FROM carpetas WHERE estado='archivado'")->fetchColumn();
-
-    $formalizados = $conexion->query("SELECT COUNT(*) FROM carpetas WHERE estado='formalizado'")->fetchColumn();
-
-    // POR FISCALIA
-    $stmt = $conexion->query("SELECT fiscalia, COUNT(*) total FROM carpetas GROUP BY fiscalia");
-
-    $labels = [];
-    $data = [];
-
-    foreach($stmt as $row){
-        $labels[] = $row['fiscalia'];
-        $data[] = $row['total'];
+    public function eliminar(PDO $conexion): void {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id > 0) {
+            (new Carpeta($conexion))->eliminar($id);
+            $_SESSION['success'] = 'Carpeta eliminada correctamente.';
+        }
+        header('Location: index.php?view=listar');
+        exit;
     }
 
-    return [
-        'archivados' => $archivados,
-        'formalizados' => $formalizados,
-        'labels' => $labels,
-        'data' => $data
-    ];
+    public function listar(PDO $conexion, array $filtros = []): array {
+        return (new Carpeta($conexion))->listar($filtros);
+    }
+
+    public function buscar(PDO $conexion, int $id): ?array {
+        return (new Carpeta($conexion))->buscarPorId($id);
+    }
+
+    public function dashboard(PDO $conexion): array {
+        return (new Carpeta($conexion))->dashboard();
+    }
+
+    private function validar(array $data): array {
+        $errores = [];
+        $obligatorios = [
+            'nro_carpeta' => 'N° de carpeta',
+            'fecha' => 'Fecha',
+            'delito' => 'Delito',
+            'fiscal_responsable' => 'Fiscal responsable',
+            'fiscalia' => 'Fiscalía',
+            'estado' => 'Estado'
+        ];
+
+        foreach ($obligatorios as $campo => $label) {
+            if (trim($data[$campo] ?? '') === '') {
+                $errores[] = "El campo {$label} es obligatorio.";
+            }
+        }
+
+        return $errores;
     }
 }
