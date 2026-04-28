@@ -1,18 +1,20 @@
-<h3>Nueva Carpeta</h3>
+<input name="fiscal_responsable">
+<input name="fiscalia">
+<input name="despacho">
+<input name="nro_carpeta">
+<input type="date" name="fecha">
+<input name="delito">
 
-<form method="POST" action="index.php?action=guardar">
-<input name="nro_carpeta" class="form-control mb-2">
-<input name="denunciante" class="form-control mb-2">
-<input name="agraviado" class="form-control mb-2">
-<input name="delito" class="form-control mb-2">
-<input type="date" name="fecha_hecho" class="form-control mb-2">
-<input name="fiscal_responsable" class="form-control mb-2">
-<input name="fiscalia" class="form-control mb-2">
+<input name="proceso_inmediato">
+<input name="formalizacion">
 
-<select name="estado" class="form-control mb-2">
-<option>archivado</option>
-<option>formalizado</option>
-</select>
+<input name="pp_fundado">
+<input name="pp_infundado">
 
-<button class="btn btn-success">Guardar</button>
-</form>
+<input name="comp_fundado">
+<input name="comp_infundado">
+
+<input name="sent_efectiva">
+<input name="sent_suspendida">
+
+<input name="estado">
