@@ -35,16 +35,7 @@ CREATE TABLE carpetas (
   estado VARCHAR(30) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE usuarios (
-  id INT(11) NOT NULL AUTO_INCREMENT,
-  usuario VARCHAR(50) DEFAULT NULL,
-  clave VARCHAR(255) DEFAULT NULL,
-  rol VARCHAR(20) DEFAULT NULL,
-  PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-COMMIT;
+commit;
 
 -- Datos
 INSERT INTO carpetas (
