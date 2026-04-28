@@ -1,61 +1,85 @@
 <?php
 session_start();
 
-require_once "../config/database.php";
-require_once "../controllers/AuthController.php";
-require_once "../controllers/CarpetaController.php";
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../controllers/AuthController.php';
+require_once __DIR__ . '/../controllers/CarpetaController.php';
+require_once __DIR__ . '/../controllers/ReporteController.php';
+require_once __DIR__ . '/../controllers/UsuarioController.php';
 
 $action = $_GET['action'] ?? null;
-$view = $_GET['view'] ?? null;
+$view = $_GET['view'] ?? 'dashboard';
 
-// ACCIONES
-if($action=="login"){
+if ($action === 'login') {
     (new AuthController())->login($conexion);
 }
-elseif($action=="logout"){
+
+if ($action === 'logout') {
     (new AuthController())->logout();
 }
-elseif($action=="guardar"){
-    (new CarpetaController())->guardar($conexion);
-}
-elseif($action=="csv"){
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment;filename=reportes.csv');
 
-    $f=fopen('php://output','w');
-    foreach($conexion->query("SELECT fiscalia,COUNT(*) total FROM carpetas GROUP BY fiscalia") as $row){
-        fputcsv($f,$row);
-    }
-    fclose($f);
+if (!isset($_SESSION['user'])) {
+    include __DIR__ . '/../views/login.php';
     exit;
 }
-else{
 
-    if(!isset($_SESSION['user'])){
-        include "../views/login.php";
-        exit;
-    }
-
-    // 🔥 DEFINIR VISTA
-    if($view=="form"){
-        $contenido = "../views/carpeta_form.php";
-    }
-    elseif($view=="listar"){
-        $data = (new CarpetaController())->listar($conexion);
-        $contenido = "../views/carpeta_list.php";
-    }
-    else{
-        $ctrl = new CarpetaController();
-        $stats = $ctrl->dashboard($conexion);
-
-        $archivados = $stats['archivados'];
-        $formalizados = $stats['formalizados'];
-        $fiscalias_labels = $stats['labels'];
-        $fiscalias_data = $stats['data'];
-
-        $contenido = "../views/dashboard.php";
-    }
-
-    // 🔥 CARGAR LAYOUT GLOBAL
-    include "../views/layout/main.php";
+switch ($action) {
+    case 'guardar':
+        (new CarpetaController())->guardar($conexion);
+        break;
+    case 'actualizar':
+        (new CarpetaController())->actualizar($conexion);
+        break;
+    case 'eliminar':
+        (new CarpetaController())->eliminar($conexion);
+        break;
+    case 'csv':
+        (new ReporteController())->exportarCsv($conexion);
+        break;
+    case 'crearUsuario':
+        (new UsuarioController())->crear($conexion);
+        break;
 }
+
+$contenido = __DIR__ . '/../views/dashboard.php';
+$titulo = 'Dashboard';
+$ctrl = new CarpetaController();
+
+switch ($view) {
+    case 'form':
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $carpeta = $id > 0 ? $ctrl->buscar($conexion, $id) : null;
+        $titulo = $carpeta ? 'Editar carpeta' : 'Nueva carpeta';
+        $contenido = __DIR__ . '/../views/carpetas/form.php';
+        break;
+
+    case 'listar':
+        $filtros = [
+            'q' => $_GET['q'] ?? '',
+            'estado' => $_GET['estado'] ?? '',
+            'fiscalia' => $_GET['fiscalia'] ?? '',
+        ];
+        $data = $ctrl->listar($conexion, $filtros);
+        $titulo = 'Listado de carpetas';
+        $contenido = __DIR__ . '/../views/carpetas/list.php';
+        break;
+
+    case 'reportes':
+        $stats = $ctrl->dashboard($conexion);
+        $titulo = 'Reportes';
+        $contenido = __DIR__ . '/../views/reportes/index.php';
+        break;
+
+    case 'usuarios':
+        $usuarios = (new UsuarioController())->listar($conexion);
+        $titulo = 'Usuarios';
+        $contenido = __DIR__ . '/../views/usuarios/index.php';
+        break;
+
+    default:
+        $stats = $ctrl->dashboard($conexion);
+        $contenido = __DIR__ . '/../views/dashboard.php';
+        break;
+}
+
+include __DIR__ . '/../views/layout/main.php';

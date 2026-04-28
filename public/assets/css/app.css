@@ -1,0 +1,10 @@
+body { background: #f5f6f8; }
+.card { border: 0; border-radius: 14px; }
+.table th { white-space: nowrap; }
+.badge { font-weight: 500; }
+.login-body { min-height: 100vh; display: grid; place-items: center; background: #eef1f5; }
+.login-card { width: min(420px, 92vw); }
+.form-label { font-weight: 600; }
+.actions { white-space: nowrap; }
+.stat-number { font-size: 2rem; font-weight: 700; }
+.small-muted { color: #6c757d; font-size: .9rem; }
