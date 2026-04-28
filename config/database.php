@@ -1,4 +1,21 @@
 <?php
-$conexion = new PDO("mysql:host=localhost;dbname=fiscalia_flagrancia_1","root","");
-$conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-?>
+$host = 'localhost';
+$dbname = 'flagrancia_fiscalia';
+$user = 'root';
+$password = '';
+$charset = 'utf8mb4';
+
+try {
+    $conexion = new PDO(
+        "mysql:host={$host};dbname={$dbname};charset={$charset}",
+        $user,
+        $password,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+} catch (PDOException $e) {
+    die('Error de conexión a la base de datos: ' . $e->getMessage());
+}
