@@ -2,32 +2,76 @@
 require_once __DIR__ . '/../models/Carpeta.php';
 
 class ReporteController {
-    public function exportarCsv(PDO $conexion): void {
-        $model = new Carpeta($conexion);
-        $data = $model->listar($_GET);
+    public function exportarCsv($conexion){
 
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=carpetas_fiscalia.csv');
+        header('Content-Disposition: attachment; filename=reporte_carpetas.csv');
 
         $f = fopen('php://output', 'w');
+
+        fputcsv($f, ['REPORTE DE CASOS DE FLAGRANCIA']);
+
+        fputcsv($f, []);
+
         fputcsv($f, [
-            'ID', 'Fiscal responsable', 'Fiscalía', 'Despacho', 'N° carpeta', 'Fecha', 'Delito',
-            'Proceso inmediato', 'Formalización', 'PP fundado/plazo', 'PP infundado',
-            'Comparecencia fundado/plazo', 'Comparecencia infundado', 'Sentencia efectiva',
-            'Sentencia suspendida', 'Estado'
+            'Fiscal Responsable',
+            'Fiscalía',
+            'Despacho',
+            'N° Carpeta',
+            'Fecha',
+            'Delito',
+            'Proceso',
+            'Formalización',
+            'PP Fundado',
+            'PP Infundado',
+            'Comparecencia Fundado',
+            'Comparecencia Infundado',
+            'Sentencia Efectiva',
+            'Sentencia Suspendida',
+            'Estado'
         ]);
 
-        foreach ($data as $row) {
+        $sql = "SELECT * FROM carpetas ORDER BY fecha DESC";
+        $stmt = $conexion->query($sql);
+
+        while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+
+            $fecha = $row['fecha'] ? date('d/m/Y', strtotime($row['fecha'])) : '';
+
+            $proceso = $row['proceso_inmediato'] ?: '-';
+            $formalizacion = $row['formalizacion'] ?: '-';
+
+            $ppFundado = $row['prision_preventiva_fundado_plazo'] ?: '-';
+            $ppInfundado = $row['prision_preventiva_infundado'] ?: '-';
+
+            $compFundado = $row['comparecencia_fundado_plazo'] ?: '-';
+            $compInfundado = $row['comparecencia_infundado'] ?: '-';
+
+            $sentEfectiva = $row['sentencia_efectiva'] ?: '-';
+            $sentSuspendida = $row['sentencia_suspendida'] ?: '-';
+
             fputcsv($f, [
-                $row['id'], $row['fiscal_responsable'], $row['fiscalia'], $row['despacho'],
-                $row['nro_carpeta'], $row['fecha'], $row['delito'], $row['proceso_inmediato'],
-                $row['formalizacion'], $row['prision_preventiva_fundado_plazo'],
-                $row['prision_preventiva_infundado'], $row['comparecencia_fundado_plazo'],
-                $row['comparecencia_infundado'], $row['sentencia_efectiva'],
-                $row['sentencia_suspendida'], $row['estado']
+                $row['fiscal_responsable'] ?: '-',
+                $row['fiscalia'] ?: '-',
+                $row['despacho'] ?: '-',
+                $row['nro_carpeta'] ?: '-',
+                $fecha,
+                $row['delito'] ?: '-',
+                $proceso,
+                $formalizacion,
+                $ppFundado,
+                $ppInfundado,
+                $compFundado,
+                $compInfundado,
+                $sentEfectiva,
+                $sentSuspendida,
+                $row['estado'] ?: '-'
             ]);
         }
+
         fclose($f);
         exit;
     }
 }
+
+
